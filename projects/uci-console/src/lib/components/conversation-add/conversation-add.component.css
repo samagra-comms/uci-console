@@ -115,17 +115,25 @@ button:disabled {
     max-width: 45rem;
     height: 0 !important;
 }
-.line-height{
+
+.line-height {
     line-height: normal;
 }
-.allCheckBtn{
+
+.allCheckBtn {
     position: absolute;
     left: 1rem;
 }
-.sample-download{
-    text-decoration: underline!important;
-    cursor: pointer!important;
+
+.sample-download {
+    text-decoration: underline !important;
+    cursor: pointer !important;
 }
-.text-danger{
-    color: red!important;
+
+.text-danger {
+    color: red !important;
+}
+
+.text-success {
+    color: green !important;
 }

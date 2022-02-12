@@ -1,6 +1,6 @@
 <ng-container [ngSwitch]="currentViewState">
 
-    <lib-user-segment-add *ngSwitchCase="'ADD_SEGMENT'"
+    <!--<lib-user-segment-add *ngSwitchCase="'ADD_SEGMENT'"
                           (cancel)="onUserSegmentCancel()"
                           (add)="onUserSegmentCreate($event)">
     </lib-user-segment-add>
@@ -9,7 +9,7 @@
                            (cancel)="onUserSegmentCancel()"
                            (add)="onUserSegmentAdd($event)"
                            [selectedUserSegments]="userSegments">
-    </lib-user-segment-list>
+    </lib-user-segment-list>-->
 
     <div *ngSwitchCase="'ADD_CONVERSATION'" class="uci-add-container">
         <div class="ui grid">
@@ -50,8 +50,9 @@
                                 <button class="sb-btn sb-btn-normal sb-btn-outline-primary mr-10" *ngIf="!isLoaderShow"
                                         (click)="backToStepOne()"> Back
                                 </button>
-                                <button class="sb-btn sb-btn-normal sb-btn-outline-primary mr-10" (click)="openItemsVerifyModal(false)"
-                                        *ngIf="!isLoaderShow">
+                                <button class="sb-btn sb-btn-normal sb-btn-outline-primary mr-10" *ngIf="!isLoaderShow"
+                                        (click)="openItemsVerifyModal(false)"
+                                        [disabled]="!isCheckedTermCondition || !botLogics.length">
                                     Save
                                 </button>
                                 <ng-container *ngIf="isLoaderShow; else submitBtn1">
@@ -61,7 +62,7 @@
                                 </ng-container>
                                 <ng-template #submitBtn1>
                                     <button class="sb-btn sb-btn-normal sb-btn-primary"
-                                            [disabled]="!isCheckedTermCondition"
+                                            [disabled]="!isCheckedTermCondition || !botLogics.length"
                                             (click)="this.conversationId ? onSubmit(true) : openItemsVerifyModal(true)">
                                         {{conversationId ? 'Update' : 'Submit'}}
                                     </button>
@@ -110,27 +111,27 @@
                             <label>Starting message <sup><i class="asterisk icon asterisk-color"></i></sup></label>
                             <input type="text" name="startingMessage" placeholder="Enter message"
                                    formControlName="startingMessage">
-                            <small *ngIf="isStartingMessageExist" class="text-danger">This starting message has already been taken</small>
+                            <small *ngIf="isStartingMessageExist" class="text-danger">This starting message is not available</small>
                         </div>
                         <div class="two fields">
                             <div class="field">
-                                <label>Start Date And Time</label>
+                                <label>Start Date<sup><i class="asterisk icon asterisk-color"></i></sup></label>
                                 <div class="ui left icon input">
                                     <i class="calendar icon"></i>
                                     <input suiDatepicker
                                            formControlName="startDate"
-                                           [pickerMode]="'datetime'"
+                                           [pickerMode]="'date'"
                                            [pickerMinDate]="startMinDate"
                                            [pickerUseNativeOnMobile]="false">
                                 </div>
                             </div>
                             <div class="field">
-                                <label>End Date And Time</label>
+                                <label>End Date</label>
                                 <div class="ui left icon input">
                                     <i class="calendar icon"></i>
                                     <input suiDatepicker
                                            formControlName="endDate"
-                                           [pickerMode]="'datetime'"
+                                           [pickerMode]="'date'"
                                            [pickerMinDate]="endMinDate"
                                            [pickerUseNativeOnMobile]="false">
                                 </div>
@@ -140,7 +141,8 @@
                     </form>
                 </div>
             </div>
-            <div class="ui divider"></div>
+            <!--Will enable this in future-->
+            <!--<div class="ui divider"></div>
             <div class="ui grid">
                 <div class="six wide column">
                     <h6>User segments</h6>
@@ -157,7 +159,7 @@
                         </button>
                     </div>
                 </div>
-            </div>
+            </div>-->
             <div class="ui grid">
                 <ng-container *ngIf="userSegments && userSegments.length">
                     <div class="ui three column grid">
@@ -184,14 +186,14 @@
                 </div>
                 <div class="two wide column right aligned">
                     <button class="sb-btn sb-btn-normal sb-btn-outline-primary"
-                            *ngIf="selectedLogic && selectedLogic.length"
+                            *ngIf="botLogics && botLogics.length"
                             (click)="openModel()">
                         Add Logic
                     </button>
                 </div>
             </div>
             <div class="ui grid">
-                <ng-container *ngIf="selectedLogic && selectedLogic.length <= 0; else showTable">
+                <ng-container *ngIf="botLogics && botLogics.length <= 0; else showTable">
                     <div class="twelve wide column center aligned">
                         <div class="pt-0">
                             <div class="w-25-per text-center" style="margin: auto; padding: 2rem;">
@@ -231,7 +233,7 @@
                             </thead>
                             <tbody>
                             <tr class="UpForReviewListHover"
-                                *ngFor="let logic of selectedLogic; let i = index;">
+                                *ngFor="let logic of botLogics; let i = index;">
                                 <td class="center aligned">{{i + 1}}</td>
                                 <td>{{logic?.name}}</td>
                                 <td>{{logic?.description}}</td>
@@ -344,7 +346,7 @@
                 </div>
                 <div class="ui grid" *ngFor="let list of Appropriateness; let i = index">
                     <div class="two wide column pb-0">
-                        <input type="checkbox" [name]="'appropriateness' + i" [(ngModel)]="list.checks">
+                        <input type="checkbox" [name]="'appropriateness' + i" [(ngModel)]="list.checks" (ngModelChange)="updateAllChecked()">
                     </div>
                     <div class="ten wide column pl-0 pb-0 line-height">
                         {{list.text}}
@@ -358,7 +360,7 @@
                 </div>
                 <div class="ui grid" *ngFor="let list of contentDetails; let i = index">
                     <div class="two wide column pb-0">
-                        <input type="checkbox" [name]="'contentDetails' + i" [(ngModel)]="list.checks">
+                        <input type="checkbox" [name]="'contentDetails' + i" [(ngModel)]="list.checks" (ngModelChange)="updateAllChecked()">
                     </div>
                     <div class="ten wide column pl-0 pb-0 line-height">
                         {{list.text}}
@@ -372,7 +374,7 @@
                 </div>
                 <div class="ui grid" *ngFor="let list of usability; let i = index">
                     <div class="two wide column pb-0">
-                        <input type="checkbox" [name]="'usability' + i" [(ngModel)]="list.checks">
+                        <input type="checkbox" [name]="'usability' + i" [(ngModel)]="list.checks" (ngModelChange)="updateAllChecked()">
                     </div>
                     <div class="ten wide column pl-0 pb-0 line-height">
                         {{list.text}}
@@ -389,10 +391,12 @@
         </ng-container>
         <ng-template #submitBtn>
             <button *ngIf="isSubmit" class="sb-btn sb-btn-normal sb-btn-primary"
+                    [disabled]="!this.allChecked"
                     (click)="onSubmit(true);">
                 Submit
             </button>
             <button *ngIf="!isSubmit" class="sb-btn sb-btn-normal sb-btn-primary"
+                    [disabled]="!this.allChecked"
                     (click)="onSubmit(false);">
                 Save
             </button>

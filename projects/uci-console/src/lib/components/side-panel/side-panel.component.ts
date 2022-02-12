@@ -73,7 +73,7 @@ export class SidePanelComponent implements OnInit, OnDestroy {
         if (event) {
             this.telemetryUtils.logInteract(event, UciData.IPageName.HOME);
         }
-        this.router.navigate([`uci-admin`], {queryParamsHandling: 'merge'});
+        this.router.navigate([`uci-admin`]);
         this.closeNav();
     }
 
@@ -84,11 +84,11 @@ export class SidePanelComponent implements OnInit, OnDestroy {
     }
 
     showMenuButton() {
-        this.showSideMenu = this.showSideMenu ? false : true;
+        this.showSideMenu = !this.showSideMenu;
     }
 
     closeNav() {
-        this.showSideMenu = this.showSideMenu ? false : true;
+        this.showSideMenu = !this.showSideMenu;
     }
 
 }

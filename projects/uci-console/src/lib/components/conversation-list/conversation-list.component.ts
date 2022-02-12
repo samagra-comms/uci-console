@@ -2,6 +2,7 @@ import {Component, OnInit} from '@angular/core';
 import {UciService} from '../../services/uci.service';
 import {Router} from '@angular/router';
 import {GlobalService} from '../../services/global.service';
+import {Helper} from '../../utils/helper';
 
 @Component({
     selector: 'lib-conversation-list',
@@ -75,6 +76,9 @@ export class ConversationListComponent implements OnInit {
             });
             obj.segmentText = segmentNames.join(', ');
 
+            obj.url = Helper.makBotUrl(bot.startingMessage || '', this.globalService.getBotPhoneNumber());
+            obj.botId = bot.id || '';
+
             this.chatBots.push(obj);
         });
         this.pager.totalItems = data.total;
@@ -138,5 +142,7 @@ export class ConversationListComponent implements OnInit {
         );
     }
 
-
+    onCopy(id) {
+        Helper.copyData(id);
+    }
 }

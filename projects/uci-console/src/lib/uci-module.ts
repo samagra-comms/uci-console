@@ -6,6 +6,7 @@ import {UciRoutingModule} from './uci-routing/uci-routing.module';
 import {NgModule} from '@angular/core';
 
 import {UciEventsService} from './uci-events.service';
+import {ToasterService} from './services/toaster.service';
 
 export function provideCsModule() {
     return window['CsModule'];
@@ -22,7 +23,7 @@ export function provideCsModule() {
     exports: [
         LibEntryComponent
     ],
-    providers: [UciEventsService, TelemetryUtilsService, {provide: 'CsModule', useFactory: provideCsModule}]
+    providers: [UciEventsService, TelemetryUtilsService, ToasterService, {provide: 'CsModule', useFactory: provideCsModule}]
 })
 export class UciModule {
 }

@@ -14,7 +14,7 @@ export class UciGraphQlService extends BaseService {
         super(http, globalService);
         this.globalService.baseUrl$.subscribe(value => {
             if (value) {
-                this.BASE_URL = value + '/v1/graphql';
+                this.BASE_URL = value + '/uci-api/gql';
             }
         });
     }

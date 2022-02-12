@@ -35,8 +35,14 @@
             <th class="two wide UpReviewTableHeader sorted bl-0">
                 Starting Message
             </th>
-            <th class="one wide UpReviewTableHeader sorted bl-0">
+            <!--<th class="one wide UpReviewTableHeader sorted bl-0">
                 User Count
+            </th>-->
+            <th class="one wide UpReviewTableHeader sorted bl-0">
+                Bot URL
+            </th>
+            <th class="one wide UpReviewTableHeader sorted bl-0">
+                Bot Id
             </th>
             <th class="one wide UpReviewTableHeader sorted bl-0 center aligned">
                 Action
@@ -49,7 +55,15 @@
             <td [ngClass]="'status-' + (content.status ? content.status.toLowerCase(): '')">{{content.status}}</td>
             <td>{{content?.description}}</td>
             <td>{{content.startingMessage}}</td>
-            <td class="center aligned">{{content.userCount}}</td>
+            <td>
+                <span class="hide" [id]="'copyUrl-' + i">{{content.url}}</span>
+                <button class="circular ui icon button" (click)="onCopy('copyUrl-' + i)">Copy</button>
+            </td>
+            <td>
+                <span class="hide" [id]="'copyId-' + i">{{content.id}}</span>
+                <button class="circular ui icon button" (click)="onCopy('copyId-' + i)">Copy</button>
+            </td>
+<!--            <td class="center aligned">{{content.userCount}}</td>-->
             <td class="center aligned">
                 <div class="ui dropdown" suiDropdown>
                     <i class="ellipsis vertical icon ellipsis-icon dropdown"></i>

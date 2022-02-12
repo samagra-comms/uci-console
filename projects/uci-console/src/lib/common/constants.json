@@ -589,7 +589,7 @@
   },
   "MENUOPTIONS":[
     {
-      "route": "uci",
+      "route": "",
       "label": "Conversations",
       "enable": true
     }

@@ -62,13 +62,13 @@ export class BaseService {
         if (error instanceof ErrorEvent) {
             return throwError(error.error.message);
         }
-
+        console.log('=====', error, error.error);
+        // this.toasterService.error(this.resourceService.messages.fmsg.m0091);
         return throwError(error.error);
     }
 
     public toFormData<T>(formValue: T) {
         const formData = new FormData();
-        console.error("[UCI Console]", JSON.stringify(formValue))
 
         for (const key of Object.keys(formValue)) {
             const value = formValue[key];

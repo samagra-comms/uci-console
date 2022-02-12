@@ -37,3 +37,7 @@
 .action-dropdown .item:hover {
     background-color: #f6f6f6;
 }
+
+.hide {
+    display: none;
+}

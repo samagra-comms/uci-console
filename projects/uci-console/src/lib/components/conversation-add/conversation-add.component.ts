@@ -6,6 +6,7 @@ import {GlobalService} from '../../services/global.service';
 import {UciService} from '../../services/uci.service';
 import moment from 'moment/moment';
 import {debounceTime} from 'rxjs/operators';
+import {ToasterService} from '../../services/toaster.service';
 
 @Component({
     selector: 'lib-conversation-add',
@@ -16,7 +17,7 @@ export class ConversationAddComponent implements OnInit {
     @ViewChild('verifyAllModal') verifyAllModal;
     currentViewState = 'ADD_CONVERSATION';
     stepIndex = 1;
-    selectedLogic = [];
+    botLogics = [];
     userSegments = [];
     column = '';
     sortDirection = '';
@@ -32,7 +33,7 @@ export class ConversationAddComponent implements OnInit {
     verifyAllItemsModal = false;
     conversationId;
     selectedLogicIndex;
-    startMinDate = new Date();
+    startMinDate = new Date(moment().subtract(1, 'd').format('YYYY-MM-DD'));
     endMinDate;
     Appropriateness = [
         {
@@ -92,9 +93,11 @@ export class ConversationAddComponent implements OnInit {
             checks: false
         }
     ];
+    allChecked: boolean;
     isSubmit: boolean;
     odkFileAlreadyExist: boolean = false;
     isStartingMessageExist = false;
+    isStartingMessageAvailable = false;
     fileErrorStatus;
     user;
 
@@ -103,10 +106,10 @@ export class ConversationAddComponent implements OnInit {
         private router: Router,
         private activatedRoute: ActivatedRoute,
         private fb: FormBuilder,
-        private globalService: GlobalService
+        private globalService: GlobalService,
+        private toasterService: ToasterService
     ) {
-        const tempDate = moment().add(1, 'days').format('YYYY-MM-DD');
-        this.endMinDate = new Date(tempDate);
+        this.endMinDate = new Date(moment().add(1, 'days').format('YYYY-MM-DD'));
     }
 
     ngOnInit() {
@@ -120,7 +123,7 @@ export class ConversationAddComponent implements OnInit {
             description: [''],
             purpose: ['', Validators.required],
             startingMessage: ['', Validators.required],
-            startDate: [null],
+            startDate: [null, Validators.required],
             endDate: [null],
             status: ['Draft']
         });
@@ -135,13 +138,15 @@ export class ConversationAddComponent implements OnInit {
         // Edit case
         this.conversationId = this.activatedRoute.snapshot.paramMap.get('id');
         if (this.conversationId) {
-            this.getUserSegmentDetail();
+            this.getBotDetails();
         }
 
         // start date and end date value change
         this.conversationForm.get('startDate').valueChanges.subscribe(val => {
-            this.conversationForm.get('endDate').patchValue(null);
-            const tempDate = moment(val).add(1, 'days').format('YYYY-MM-DD');
+            if ((this.conversationForm.value.endDate && moment(this.conversationForm.value.endDate).isBefore(moment(val))) || !val) {
+                this.conversationForm.get('endDate').patchValue(null);
+            }
+            const tempDate = moment(val).format('YYYY-MM-DD');
             this.endMinDate = new Date(tempDate);
         });
 
@@ -196,6 +201,33 @@ export class ConversationAddComponent implements OnInit {
         this.router.navigate(['uci-admin']);
     }
 
+    updateAllChecked() {
+        let allChecked = true;
+        for (const val of this.Appropriateness) {
+            if (!val.checks) {
+                allChecked = false;
+                break;
+            }
+        }
+        if (allChecked) {
+            for (const val of this.contentDetails) {
+                if (!val.checks) {
+                    allChecked = false;
+                    break;
+                }
+            }
+        }
+        if (allChecked) {
+            for (const val of this.usability) {
+                if (!val.checks) {
+                    allChecked = false;
+                    break;
+                }
+            }
+        }
+        this.allChecked = allChecked;
+    }
+
     onSubmit(isTriggerBot = false) {
         const reqObj = {
             ...this.conversationForm.value,
@@ -205,9 +237,15 @@ export class ConversationAddComponent implements OnInit {
         this.userSegments.forEach(userSegment => {
             reqObj.users.push(userSegment.id);
         });
-        this.selectedLogic.forEach(logic => {
+        this.botLogics.forEach(logic => {
             reqObj.logic.push(logic.id);
         });
+        if (reqObj.startDate) {
+            reqObj.startDate = moment(reqObj.startDate).format('YYYY-MM-DD');
+        }
+        if (reqObj.endDate) {
+            reqObj.endDate = moment(reqObj.endDate).format('YYYY-MM-DD');
+        }
 
         this.isLoaderShow = true;
 
@@ -220,6 +258,10 @@ export class ConversationAddComponent implements OnInit {
                 }, error => {
                     this.isLoaderShow = false;
                     this.verifyAllItemsModal = true;
+                    this.allChecked = false;
+                    if (error.result && error.result.error) {
+                        this.toasterService.error(error.result.error);
+                    }
                 }
             );
         } else {
@@ -236,6 +278,10 @@ export class ConversationAddComponent implements OnInit {
                 }, error => {
                     this.isLoaderShow = false;
                     this.verifyAllItemsModal = true;
+                    this.allChecked = false;
+                    if (error.result && error.result.error) {
+                        this.toasterService.error(error.result.error);
+                    }
                 }
             );
         }
@@ -254,7 +300,11 @@ export class ConversationAddComponent implements OnInit {
                 });
             }, error => {
                 this.verifyAllItemsModal = true;
+                this.allChecked = false;
                 this.isLoaderShow = false;
+                if (error.result && error.result.error) {
+                    this.toasterService.error(error.result.error);
+                }
             }
         );
     }
@@ -280,6 +330,7 @@ export class ConversationAddComponent implements OnInit {
 
     openItemsVerifyModal(isSubmitBtn: boolean) {
         this.verifyAllItemsModal = true;
+        this.allChecked = false;
         this.isSubmit = isSubmitBtn;
     }
 
@@ -305,7 +356,7 @@ export class ConversationAddComponent implements OnInit {
                     this.isModalLoaderShow = false;
                     const existingLogic = reqData;
                     delete existingLogic.id;
-                    this.selectedLogic[this.selectedLogicIndex] = Object.assign(this.selectedLogic[this.selectedLogicIndex], existingLogic);
+                    this.botLogics[this.selectedLogicIndex] = Object.assign(this.botLogics[this.selectedLogicIndex], existingLogic);
                 }, error => {
                     this.isModalLoaderShow = false;
                 }
@@ -316,7 +367,7 @@ export class ConversationAddComponent implements OnInit {
                     this.isModalLoaderShow = false;
                     const existingLogic = reqData;
                     delete existingLogic.id;
-                    this.selectedLogic.push({
+                    this.botLogics.push({
                         id: data.data.id,
                         ...existingLogic,
                     });
@@ -353,15 +404,18 @@ export class ConversationAddComponent implements OnInit {
         this.logicForm.patchValue({formId: ''});
         this.isModalLoaderShow = true;
         this.uciService.uploadFile(obj).subscribe((fileInfo: any) => {
-                if (fileInfo.result?.data) {
-                    this.logicForm.patchValue({formId: fileInfo.result?.data});
+                if (fileInfo.data) {
+                    this.logicForm.patchValue({formId: fileInfo.data});
                 }
                 this.isModalLoaderShow = false;
                 this.odkFileAlreadyExist = false;
             }, error => {
                 this.isModalLoaderShow = false;
                 this.odkFileAlreadyExist = true;
-                this.fileErrorStatus = error.error.status;
+                this.fileErrorStatus = error.status;
+                if (error.result && error.result.error) {
+                    this.toasterService.error(error.result.error);
+                }
             }
         );
     }
@@ -369,27 +423,32 @@ export class ConversationAddComponent implements OnInit {
     onDelete(logic, index) {
         this.uciService.deleteLogic(logic.id).subscribe(
             file => {
-                this.selectedLogic.splice(index, 1);
+                this.botLogics.splice(index, 1);
             }
         );
     }
 
-    getUserSegmentDetail() {
-        this.uciService.getBotUserDetails(this.conversationId).subscribe((val: any) => {
+    getBotDetails() {
+        this.uciService.getBotDetails(this.conversationId).subscribe((val: any) => {
             if (val.data) {
                 this.conversationForm.patchValue({
                     name: val.data.name,
                     description: val.data.description,
                     purpose: val.data.purpose,
                     startingMessage: val.data.startingMessage,
-                    startDate: val.data.startDate ? val.data.startDate : '',
-                    endDate: val.data.endDate ? val.data.endDate : ''
+                    status: val.data.status,
+                    startDate: val.data.startDate ? new Date(moment(val.data.startDate).format('YYYY-MM-DD')) : null,
+                    endDate: val.data.endDate ? new Date(moment(val.data.endDate).format('YYYY-MM-DD')) : null
                 });
+                if (val.data.startDate) {
+                    const minDate = moment().isBefore(moment(val.data.startDate)) ?  moment().subtract(1, 'd') : moment(val.data.startDate);
+                    this.startMinDate = new Date(moment(minDate).format('YYYY-MM-DD'));
+                }
                 if (val.data.userSegments) {
                     this.userSegments = val.data.userSegments;
                 }
                 if (val.data.logic) {
-                    this.selectedLogic = val.data.logic;
+                    this.botLogics = val.data.logic;
                 }
             }
         });
@@ -405,11 +464,14 @@ export class ConversationAddComponent implements OnInit {
         this.usability.forEach(val => {
             val.checks = isAllCheck;
         });
+        this.allChecked = true;
     }
 
     onStarringMessageChange() {
         this.uciService.getCheckStartingMessage({startingMessage: this.conversationForm.value.startingMessage}).subscribe(val => {
-            this.isStartingMessageExist = true;
+            if (val && val.data && val.data.id) {
+                this.isStartingMessageExist = (this.conversationId !== val.data.id);
+            }
         }, error => {
             this.isStartingMessageExist = false;
         });
@@ -417,10 +479,10 @@ export class ConversationAddComponent implements OnInit {
     }
 
     manualDownload() {
-        window.open(this.globalService.getBaseUrl() + '/UCI%20_%20ODK%20Instruction%20Manual.pdf', '_blank');
+        window.open(this.globalService.getBlobUrl().replace('/player', '') + 'UCI%20_%20ODK%20Instruction%20Manual.pdf', '_blank');
     }
 
     sampleODKDownload() {
-        window.open(this.globalService.getBaseUrl() + '/Sample_ODK.xlsx', '_blank');
+        window.open(this.globalService.getBlobUrl().replace('/player', '') + 'Sample_ODK.xlsx', '_blank');
     }
 }

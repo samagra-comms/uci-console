@@ -40,7 +40,7 @@ export class UciService extends BaseService {
         return this.getRequest(this.BASE_URL + `bot/delete/${botId}`, {}, {asset: 'bot'});
     }
 
-    getBotUserDetails(id) {
+    getBotDetails(id) {
         return this.getRequest(this.BASE_URL + `bot/get/${id}`, {}, {asset: 'bot'});
     }
 
@@ -88,9 +88,7 @@ export class UciService extends BaseService {
 
     // Mis APIs
     uploadFile(obj): Observable<any> {
-        let headers = new HttpHeaders();
-        headers = headers.set('Content-Type', 'multipart/form-data');
-        return this.http.post(this.BASE_URL + 'forms/upload', this.toFormData(obj), {headers});
+        return this.postRequest(this.BASE_URL + 'forms/upload', this.toFormData(obj));
     }
 
     readForm(data) {
